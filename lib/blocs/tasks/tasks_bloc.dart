@@ -25,7 +25,23 @@ class TasksBloc extends Bloc<TaskEvent, TasksState> {
     }
   }
 
-  void _onDeleteTask(DeleteTask event, Emitter<TasksState> emit) {}
+  void _onDeleteTask(DeleteTask event, Emitter<TasksState> emit) {
+    final state = this.state;
+    if (state is TasksLoaded) {
+      List<Task> tasks = state.tasks.where((task) {
+        return task.id != event.task.id;
+      }).toList();
+      emit(TasksLoaded(tasks: tasks));
+    }
+  }
 
-  void _onUpdateTask(UpdateTask event, Emitter<TasksState> emit) {}
+  void _onUpdateTask(UpdateTask event, Emitter<TasksState> emit) {
+    final state = this.state;
+    if (state is TasksLoaded) {
+      List<Task> tasks = (state.tasks.map((task) {
+        return task.id == event.task.id ? event.task : task;
+      })).toList();
+      emit(TasksLoaded(tasks: tasks));
+    }
+  }
 }

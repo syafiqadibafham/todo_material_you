@@ -12,8 +12,6 @@ void main() {
   runApp(const MyApp());
 }
 
-Color defaultColor = Color(0XFF4166f5);
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -21,52 +19,27 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-            create: (context) => TasksBloc()
-              ..add(LoadTask(tasks: [
-                Task(id: 1, userId: 1, title: "delectus aut autem"),
-                Task(
-                  id: 2,
-                  userId: 1,
-                  title: "quis ut nam facilis et officia qui",
-                  isComplete: true,
-                ),
-              ])))
-      ],
-      child: DynamicColorBuilder(
-          builder: (ColorScheme? lightDynamic, ColorScheme? dark) {
-        ColorScheme lightColorScheme;
-        ColorScheme darkColorScheme;
-
-        if (lightDynamic != null && dark != null) {
-          lightColorScheme = lightDynamic.harmonized()..copyWith();
-          lightColorScheme = lightColorScheme.copyWith(secondary: defaultColor);
-          darkColorScheme = dark.harmonized();
-        } else {
-          lightColorScheme = ColorScheme.fromSeed(seedColor: defaultColor);
-          darkColorScheme = ColorScheme.fromSeed(
-              seedColor: defaultColor, brightness: Brightness.dark);
-        }
-
-        return MaterialApp(
+        providers: [
+          BlocProvider(
+              create: (context) => TasksBloc()
+                ..add(LoadTask(tasks: [
+                  Task(id: 1, userId: 1, title: "delectus aut autem"),
+                  Task(
+                    id: 2,
+                    userId: 1,
+                    title: "quis ut nam facilis et officia qui",
+                    isComplete: true,
+                  ),
+                ])))
+        ],
+        child: MaterialApp(
           title: 'ToDo M-You App',
           theme: ThemeData(
               useMaterial3: true,
-              colorScheme: lightColorScheme,
-              backgroundColor: lightColorScheme.primaryContainer,
-              primaryColor: lightColorScheme.primary,
-              primaryTextTheme: TextTheme(
-                  headline1:
-                      TextStyle(color: lightColorScheme.onPrimaryContainer),
-                  headline6: TextStyle(color: Colors.white)),
-              appBarTheme: AppBarTheme(
-                backgroundColor: lightColorScheme.primaryContainer,
-              )),
+              primaryColor: const Color(0XFFceef86),
+              backgroundColor: const Color(0XFF201a1a)),
           home: const MyHomePage(title: 'Your Tasks'),
-        );
-      }),
-    );
+        ));
   }
 }
 
@@ -101,20 +74,30 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<Task?> _openDialog() => showDialog<Task>(
       context: context,
       builder: (context) => AlertDialog(
+            backgroundColor: Color(0XFFfeddaa),
             title: TextField(
                 controller: textInputTitleController,
-                decoration: InputDecoration(
-                    hintText: 'Task Title', border: InputBorder.none)),
+                decoration: const InputDecoration(
+                    fillColor: Color(0XFF322a1d),
+                    hintText: 'Task Title',
+                    border: InputBorder.none)),
             content: TextField(
                 controller: textInputUserIdController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                     hintText: 'User ID',
                     border: InputBorder.none,
                     filled: true)),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Cancel')),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    textInputTitleController.text = '';
+                    textInputUserIdController.text = '';
+                  },
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey),
+                  )),
               TextButton(
                   onPressed: (() {
                     Navigator.of(context).pop(Task(
@@ -122,7 +105,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         userId: int.parse(textInputUserIdController.text),
                         title: textInputTitleController.text));
                   }),
-                  child: Text('Add'))
+                  child: const Text('Add',
+                      style: TextStyle(color: Color(0xFF322a1d))))
             ],
           ));
 
@@ -131,49 +115,64 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       backgroundColor: Theme.of(context).backgroundColor,
       appBar: AppBar(
+        backgroundColor: Theme.of(context).backgroundColor,
         title: Text(
           widget.title,
-          style: TextStyle(color: Theme.of(context).primaryColor),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ),
       body: BlocBuilder<TasksBloc, TasksState>(
         builder: (context, state) {
           if (state is TasksLoading) {
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           }
           if (state is TasksLoaded) {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
                   ...state.tasks.map(
-                    (task) => TaskWidget(
-                      task: task,
+                    (task) => InkWell(
+                      onTap: (() {
+                        context.read<TasksBloc>().add(UpdateTask(
+                            task: task.copyWith(isComplete: !task.isComplete)));
+                      }),
+                      child: TaskWidget(
+                        task: task,
+                      ),
                     ),
+                  ),
+                  const SizedBox(
+                    height: 80,
                   )
                 ],
               ),
             );
           } else {
-            return Text('No Task Found');
+            return const Text('No Task Found');
           }
         },
       ),
       floatingActionButton: BlocListener<TasksBloc, TasksState>(
         listener: (context, state) {
           if (state is TasksLoaded) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content: Text('New Task added!'),
             ));
           }
         },
         child: FloatingActionButton(
+          backgroundColor: Color(0xFFf8bd47),
+          foregroundColor: Color(0xFF322a1d),
           onPressed: () async {
             final task = await _openDialog();
-            context.read<TasksBloc>().add(
-                  AddTask(task: task!),
-                );
+            if (task != null) {
+              context.read<TasksBloc>().add(
+                    AddTask(task: task),
+                  );
+            }
           },
           tooltip: 'Increment',
           child: const Icon(Icons.add),
