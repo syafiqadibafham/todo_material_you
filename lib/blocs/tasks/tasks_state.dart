@@ -8,8 +8,6 @@ abstract class TasksState extends Equatable {
   List<Object> get props => [];
 }
 
-class TasksInitial extends TasksState {}
-
 class TasksLoading extends TasksState {}
 
 class TasksLoaded extends TasksState {
@@ -19,4 +17,9 @@ class TasksLoaded extends TasksState {
 
   @override
   List<Object> get props => [tasks];
+}
+
+class TasksError extends TasksState {
+  final String? message;
+  const TasksError(this.message);
 }

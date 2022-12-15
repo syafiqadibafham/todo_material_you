@@ -1,21 +1,32 @@
+import 'dart:convert';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 import 'package:todo_material_you/model/task.dart';
-
+import 'package:http/http.dart' as http;
+import 'package:todo_material_you/repositories/task_repository.dart';
 part 'tasks_event.dart';
 part 'tasks_state.dart';
 
 class TasksBloc extends Bloc<TaskEvent, TasksState> {
-  TasksBloc() : super(TasksInitial()) {
+  final TaskRepository _taskRepository;
+
+  TasksBloc(this._taskRepository) : super(TasksLoaded()) {
     on<LoadTask>(_onLoadTask);
     on<AddTask>(_onAddTask);
     on<DeleteTask>(_onDeleteTask);
     on<UpdateTask>(_onUpdateTask);
   }
 
-  void _onLoadTask(LoadTask event, Emitter<TasksState> emit) {
-    emit(TasksLoaded(tasks: event.tasks));
+  Future<void> _onLoadTask(LoadTask event, Emitter<TasksState> emit) async {
+    emit(TasksLoading());
+    try {
+      final tasks = await _taskRepository.getTask();
+      emit(TasksLoaded(tasks: tasks));
+    } catch (e) {
+      emit(TasksError(e.toString()));
+    }
   }
 
   void _onAddTask(AddTask event, Emitter<TasksState> emit) {
