@@ -4,6 +4,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todo_material_you/blocs/tasks/tasks_bloc.dart';
+import 'package:todo_material_you/model/task.dart';
 import 'package:todo_material_you/widgets/checkBoxes.dart';
 import 'package:todo_material_you/widgets/task.dart';
 
@@ -21,7 +22,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => TasksBloc()..add(LoadTask()))
+        BlocProvider(
+            create: (context) => TasksBloc()
+              ..add(LoadTask(tasks: [
+                Task(id: 1, userId: 1, title: "delectus aut autem"),
+                Task(
+                  id: 2,
+                  userId: 1,
+                  title: "quis ut nam facilis et officia qui",
+                  isComplete: true,
+                ),
+              ])))
       ],
       child: DynamicColorBuilder(
           builder: (ColorScheme? lightDynamic, ColorScheme? dark) {
@@ -69,13 +80,51 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  late TextEditingController textInputTitleController;
+  late TextEditingController textInputUserIdController;
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+
+    textInputTitleController = TextEditingController();
+    textInputUserIdController = TextEditingController();
   }
+
+  @override
+  void dispose() {
+    textInputTitleController.dispose();
+    textInputUserIdController.dispose();
+    super.dispose();
+  }
+
+  Future<Task?> _openDialog() => showDialog<Task>(
+      context: context,
+      builder: (context) => AlertDialog(
+            title: TextField(
+                controller: textInputTitleController,
+                decoration: InputDecoration(
+                    hintText: 'Task Title', border: InputBorder.none)),
+            content: TextField(
+                controller: textInputUserIdController,
+                decoration: InputDecoration(
+                    hintText: 'User ID',
+                    border: InputBorder.none,
+                    filled: true)),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('Cancel')),
+              TextButton(
+                  onPressed: (() {
+                    Navigator.of(context).pop(Task(
+                        id: 201,
+                        userId: int.parse(textInputUserIdController.text),
+                        title: textInputTitleController.text));
+                  }),
+                  child: Text('Add'))
+            ],
+          ));
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +147,11 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  TaskWidget(),
+                  ...state.tasks.map(
+                    (task) => TaskWidget(
+                      task: task,
+                    ),
+                  )
                 ],
               ),
             );
@@ -107,10 +160,24 @@ class _MyHomePageState extends State<MyHomePage> {
           }
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+      floatingActionButton: BlocListener<TasksBloc, TasksState>(
+        listener: (context, state) {
+          if (state is TasksLoaded) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('New Task added!'),
+            ));
+          }
+        },
+        child: FloatingActionButton(
+          onPressed: () async {
+            final task = await _openDialog();
+            context.read<TasksBloc>().add(
+                  AddTask(task: task!),
+                );
+          },
+          tooltip: 'Increment',
+          child: const Icon(Icons.add),
+        ),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }

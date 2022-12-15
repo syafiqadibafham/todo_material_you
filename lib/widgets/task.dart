@@ -3,8 +3,11 @@ import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:todo_material_you/widgets/checkBoxes.dart';
 
+import '../model/task.dart';
+
 class TaskWidget extends StatelessWidget {
-  const TaskWidget({super.key});
+  final Task task;
+  const TaskWidget({super.key, required this.task});
 
   @override
   Widget build(BuildContext context) {
@@ -21,10 +24,10 @@ class TaskWidget extends StatelessWidget {
               CheckBoxesWidget(),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(
-                  'delectus aut autem',
+                  task.title,
                   style: Theme.of(context).textTheme.headline6,
                 ),
-                Text('by User'),
+                Text('by User ${task.userId}'),
               ]),
             ],
           ),
