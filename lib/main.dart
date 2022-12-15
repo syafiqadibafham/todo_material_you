@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todo_material_you/blocs/tasks/tasks_bloc.dart';
 import 'package:todo_material_you/model/task.dart';
+import 'package:todo_material_you/repositories/task_repository.dart';
 import 'package:todo_material_you/widgets/checkBoxes.dart';
 import 'package:todo_material_you/widgets/task.dart';
 
@@ -18,28 +19,17 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-        providers: [
-          BlocProvider(
-              create: (context) => TasksBloc()
-                ..add(LoadTask(tasks: [
-                  Task(id: 1, userId: 1, title: "delectus aut autem"),
-                  Task(
-                    id: 2,
-                    userId: 1,
-                    title: "quis ut nam facilis et officia qui",
-                    isComplete: true,
-                  ),
-                ])))
-        ],
-        child: MaterialApp(
-          title: 'ToDo M-You App',
-          theme: ThemeData(
-              useMaterial3: true,
-              primaryColor: const Color(0XFFceef86),
-              backgroundColor: const Color(0XFF201a1a)),
-          home: const MyHomePage(title: 'Your Tasks'),
-        ));
+    return MaterialApp(
+      title: 'ToDo M-You App',
+      theme: ThemeData(
+          useMaterial3: true,
+          primaryColor: const Color(0XFFceef86),
+          backgroundColor: const Color(0XFF201a1a)),
+      home: RepositoryProvider(
+        create: (context) => TaskRepository(),
+        child: const MyHomePage(title: 'Your Tasks'),
+      ),
+    );
   }
 }
 
@@ -74,7 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<Task?> _openDialog() => showDialog<Task>(
       context: context,
       builder: (context) => AlertDialog(
-            backgroundColor: Color(0XFFfeddaa),
+            backgroundColor: const Color(0XFFfeddaa),
             title: TextField(
                 controller: textInputTitleController,
                 decoration: const InputDecoration(
@@ -112,72 +102,83 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).backgroundColor,
-      appBar: AppBar(
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+            create: (context) => TasksBloc(
+                  RepositoryProvider.of<TaskRepository>(context),
+                )..add(LoadTask()))
+      ],
+      child: Scaffold(
         backgroundColor: Theme.of(context).backgroundColor,
-        title: Text(
-          widget.title,
-          style:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).backgroundColor,
+          title: Text(
+            widget.title,
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.w700),
+          ),
         ),
-      ),
-      body: BlocBuilder<TasksBloc, TasksState>(
-        builder: (context, state) {
-          if (state is TasksLoading) {
-            return const CircularProgressIndicator();
-          }
-          if (state is TasksLoaded) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  ...state.tasks.map(
-                    (task) => InkWell(
-                      onTap: (() {
-                        context.read<TasksBloc>().add(UpdateTask(
-                            task: task.copyWith(isComplete: !task.isComplete)));
-                      }),
-                      child: TaskWidget(
-                        task: task,
+        body: BlocBuilder<TasksBloc, TasksState>(
+          builder: (context, state) {
+            if (state is TasksLoading) {
+              return const CircularProgressIndicator();
+            }
+            if (state is TasksLoaded) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      ...state.tasks.map(
+                        (task) => InkWell(
+                          onTap: (() {
+                            context.read<TasksBloc>().add(UpdateTask(
+                                task: task.copyWith(
+                                    isComplete: !task.isComplete)));
+                          }),
+                          child: TaskWidget(
+                            task: task,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(
+                        height: 80,
+                      )
+                    ],
                   ),
-                  const SizedBox(
-                    height: 80,
-                  )
-                ],
-              ),
-            );
-          } else {
-            return const Text('No Task Found');
-          }
-        },
-      ),
-      floatingActionButton: BlocListener<TasksBloc, TasksState>(
-        listener: (context, state) {
-          if (state is TasksLoaded) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('New Task added!'),
-            ));
-          }
-        },
-        child: FloatingActionButton(
-          backgroundColor: Color(0xFFf8bd47),
-          foregroundColor: Color(0xFF322a1d),
-          onPressed: () async {
-            final task = await _openDialog();
-            if (task != null) {
-              context.read<TasksBloc>().add(
-                    AddTask(task: task),
-                  );
+                ),
+              );
+            } else {
+              return const Text('No Task Found');
             }
           },
-          tooltip: 'Increment',
-          child: const Icon(Icons.add),
         ),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        floatingActionButton: BlocListener<TasksBloc, TasksState>(
+          listener: (context, state) {
+            if (state is TasksLoaded) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('Task Updated!'),
+              ));
+            }
+          },
+          child: FloatingActionButton(
+            backgroundColor: const Color(0xFFf8bd47),
+            foregroundColor: const Color(0xFF322a1d),
+            onPressed: () async {
+              final task = await _openDialog();
+              if (task != null) {
+                context.read<TasksBloc>().add(
+                      AddTask(task: task),
+                    );
+              }
+            },
+            tooltip: 'Increment',
+            child: const Icon(Icons.add),
+          ),
+        ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
