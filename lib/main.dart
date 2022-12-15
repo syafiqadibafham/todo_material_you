@@ -50,7 +50,7 @@ class MyApp extends StatelessWidget {
         }
 
         return MaterialApp(
-          title: 'Flutter Demo',
+          title: 'ToDo M-You App',
           theme: ThemeData(
               useMaterial3: true,
               colorScheme: lightColorScheme,
@@ -63,7 +63,7 @@ class MyApp extends StatelessWidget {
               appBarTheme: AppBarTheme(
                 backgroundColor: lightColorScheme.primaryContainer,
               )),
-          home: const MyHomePage(title: 'Flutter Demo Home Page'),
+          home: const MyHomePage(title: 'Your Tasks'),
         );
       }),
     );
