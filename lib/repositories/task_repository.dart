@@ -10,7 +10,7 @@ class TaskRepository {
     final response = await http.get(Uri.parse(_baseUrl));
     if (response.statusCode == 200) {
       return (json.decode(response.body) as List)
-          .map((i) => Task.fromJson(i))
+          .map((task) => Task.fromJson(task))
           .toList();
     } else {
       throw Exception("Failed to load tasks");

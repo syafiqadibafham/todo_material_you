@@ -31,8 +31,6 @@ environment:
 dependencies:
   build_runner: ^2.3.2
   cupertino_icons: ^1.0.2
-  dio: ^4.0.6
-  dynamic_color: ^1.5.4
   equatable: ^2.0.5
   flutter:
     sdk: flutter

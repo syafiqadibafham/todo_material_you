@@ -4,7 +4,6 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 import 'package:todo_material_you/model/task.dart';
-import 'package:http/http.dart' as http;
 import 'package:todo_material_you/repositories/task_repository.dart';
 part 'tasks_event.dart';
 part 'tasks_state.dart';

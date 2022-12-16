@@ -4,19 +4,6 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:http/http.dart' as http;
 part 'task.g.dart';
 
-Future<Task> fetchTasks() async {
-  String url = Uri.encodeFull('https://jsonplaceholder.typicode.com/todos');
-  final response = await http.get(Uri.parse(url));
-
-  if (response.statusCode == 200) {
-    print(response.body);
-
-    return Task.fromJson(jsonDecode(response.body));
-  } else {
-    throw Exception('Failed to load task');
-  }
-}
-
 @JsonSerializable()
 class Task {
   final int id;
