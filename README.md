@@ -76,4 +76,7 @@ widgets/
 ```
 
 ## Screenshots
+| Start page | Add New Task |
+| ---------------- | ---------------- |
+| ![](screenshots/start_page.png) | ![](screenshots/add_task.png) |
 
